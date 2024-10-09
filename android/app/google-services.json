@@ -1,0 +1,87 @@
+{
+  "project_info": {
+    "project_number": "502470921886",
+    "firebase_url": "https://yoga-f7065-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "yoga-f7065",
+    "storage_bucket": "yoga-f7065.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502470921886:android:20b805680c3ac85ded358f",
+        "android_client_info": {
+          "package_name": "com.ecommerceappfigmatocode"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWjI8dt-V_-Gpp9JaZFQGufeFiCRJ022Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502470921886:android:240a5ef7e9faf27bed358f",
+        "android_client_info": {
+          "package_name": "com.yoga"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWjI8dt-V_-Gpp9JaZFQGufeFiCRJ022Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502470921886:android:46acbc5311652ec8ed358f",
+        "android_client_info": {
+          "package_name": "com.yogaadmin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWjI8dt-V_-Gpp9JaZFQGufeFiCRJ022Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502470921886:android:45c80ec61eda480eed358f",
+        "android_client_info": {
+          "package_name": "com.yogacustomers"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWjI8dt-V_-Gpp9JaZFQGufeFiCRJ022Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
