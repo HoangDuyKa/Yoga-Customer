@@ -1,14 +1,16 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import React from "react";
+import React, { useContext } from "react";
 import { fonts } from "../utils/fonts";
 import { useNavigation } from "@react-navigation/native";
+import { UserContext } from "../context/UserContext";
 
 const Header = ({ isCart }) => {
   const navigation = useNavigation();
-
+  const { userImage } = useContext(UserContext);
   const handleBack = () => {
     navigation.navigate("HOME");
   };
+
   return (
     <View style={styles.header}>
       {isCart ? (
@@ -31,9 +33,10 @@ const Header = ({ isCart }) => {
       )}
 
       {isCart ? <Text style={styles.titleText}>My Cart</Text> : null}
-      <View>
+      <View style={styles.appDrawerContainer}>
         <Image
-          source={require("../assets/Ellipse2.png")}
+          source={{ uri: userImage }}
+          // source={require("../assets/Ellipse2.png")}
           style={styles.profileImage}
         />
       </View>
@@ -64,6 +67,7 @@ const styles = StyleSheet.create({
   profileImage: {
     height: 44,
     width: 44,
+    borderRadius: 50,
   },
   header: {
     flexDirection: "row",

@@ -257,7 +257,7 @@ const HomeScreen = () => {
   const fetchPostedByInfo = async (postedBy) => {
     try {
       const snapshot = await database()
-        .ref(`/admin_details/${postedBy}`)
+        .ref(`/user_details/${postedBy}`)
         .once("value");
       return snapshot.val(); // Trả về thông tin người dùng
     } catch (error) {
@@ -276,7 +276,6 @@ const HomeScreen = () => {
         Object.keys(data).map(async (key) => {
           const course = data[key];
           const postedByInfo = await fetchPostedByInfo(course.postedBy); // Lấy thông tin người đăng
-
           return {
             id: key,
             ...course,

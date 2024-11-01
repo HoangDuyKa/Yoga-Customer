@@ -8,25 +8,6 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:502470921886:android:20b805680c3ac85ded358f",
-        "android_client_info": {
-          "package_name": "com.ecommerceappfigmatocode"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCWjI8dt-V_-Gpp9JaZFQGufeFiCRJ022Q"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:502470921886:android:240a5ef7e9faf27bed358f",
         "android_client_info": {
           "package_name": "com.yoga"

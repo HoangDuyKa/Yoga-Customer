@@ -1,4 +1,4 @@
-package com.ecommerceappfigmatocode
+package com.yogacustomers
 
 import android.app.Application
 import com.facebook.react.PackageList
