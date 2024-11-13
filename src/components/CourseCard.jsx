@@ -1,39 +1,5 @@
 import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
-
-// const CourseCard = () => {
-//   return (
-//     <View style={styles.cardView}>
-//       <View style={styles.container}>
-//         {/* Image for the course */}
-//         <Image
-//           source={require("./../assets/placeholder.png")} // Replace with actual image path
-//           style={styles.courseImage}
-//           resizeMode="cover"
-//         />
-
-//         {/* Course Title */}
-//         <Text style={styles.courseTitle}>Course Title</Text>
-
-//         {/* Posted By and Price Section */}
-//         <View style={styles.row}>
-//           {/* Profile Image */}
-//           <Image
-//             source={require("./../assets/yoga_logo.png")} // Replace with actual image path
-//             style={styles.profileImage}
-//             resizeMode="cover"
-//           />
-
-//           {/* Posted By Name */}
-//           <Text style={styles.postedByName}>Posted By Name</Text>
-
-//           {/* Course Price */}
-//           <Text style={styles.coursePrice}>$50</Text>
-//         </View>
-//       </View>
-//     </View>
-//   );
-// };
 const CourseCard = ({ item, handleProductClick }) => {
   if (!item) {
     // Kiểm tra nếu item không tồn tại
@@ -47,7 +13,9 @@ const CourseCard = ({ item, handleProductClick }) => {
           style={styles.courseImage}
           resizeMode="cover"
         />
-        <Text style={styles.courseTitle}>{item.title}</Text>
+        <Text numberOfLines={1} ellipsizeMode="tail" style={styles.courseTitle}>
+          {item.title}
+        </Text>
         <View style={styles.row}>
           <Image
             source={{ uri: item.profile }} // Hiển thị ảnh người đăng
@@ -64,6 +32,7 @@ const CourseCard = ({ item, handleProductClick }) => {
 
 const styles = StyleSheet.create({
   cardView: {
+    width: 188,
     margin: 10,
     padding: 15,
     backgroundColor: "#fff",

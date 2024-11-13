@@ -14,7 +14,10 @@ import auth from "@react-native-firebase/auth";
 import database from "@react-native-firebase/database";
 import storage from "@react-native-firebase/storage";
 import { UserContext } from "../context/UserContext";
+
 const AccountScreen = ({ navigation }) => {
+  const [name, setName] = useState("Current Name");
+
   const handleLogout = () => {
     auth()
       .signOut()
@@ -31,6 +34,19 @@ const AccountScreen = ({ navigation }) => {
 
   useEffect(() => {
     fetchUserData();
+
+    const user = auth().currentUser;
+    if (user) {
+      const userRef = database().ref(`/user_details/${user.uid}/name`);
+
+      // Set up a real-time listener
+      const listener = userRef.on("value", (snapshot) => {
+        setName(snapshot.val() || "Unknown");
+      });
+
+      // Clean up the listener on unmount
+      return () => userRef.off("value", listener);
+    }
   }, []);
 
   const fetchUserData = async () => {
@@ -85,8 +101,21 @@ const AccountScreen = ({ navigation }) => {
         <Image source={{ uri: userImage }} style={styles.profileImage} />
       </TouchableOpacity>
 
-      <Text style={styles.userName}>{userData.name}</Text>
+      <Text style={styles.userName}>{name}</Text>
       <Text style={styles.userEmail}>{userData.email}</Text>
+
+      <Card style={styles.card}>
+        <TouchableOpacity
+          style={styles.cardContent}
+          onPress={() => navigation.navigate("EditProfile")}
+        >
+          <Image
+            source={require("../assets/edituser.png")}
+            style={styles.icon}
+          />
+          <Text style={styles.cardText}>Update user information</Text>
+        </TouchableOpacity>
+      </Card>
 
       <Card style={styles.card}>
         <TouchableOpacity style={styles.cardContent}>

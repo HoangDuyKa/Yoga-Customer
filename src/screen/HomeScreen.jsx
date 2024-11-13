@@ -1,122 +1,5 @@
 // import {
 //   FlatList,
-//   Image,
-//   ImageBackground,
-//   StyleSheet,
-//   Text,
-//   TextInput,
-//   View,
-// } from "react-native";
-// import React, { useState } from "react";
-// import LinearGradient from "react-native-linear-gradient";
-// import Header from "../components/Header";
-// import Tags from "../components/Tags";
-// import ProductCard from "../components/ProductCard";
-// import data from "../data/data.json";
-// import { useNavigation } from "@react-navigation/native";
-
-// const HomeScreen = () => {
-//   const [products, setProducts] = useState(data.products);
-//   const navigation = useNavigation();
-//   const handleProductDetails = (item) => {
-//     navigation.navigate("PRODUCT_DETAILS", { item });
-//   };
-//   const toggleFavorite = (item) => {
-//     setProducts(
-//       products.map((prod) => {
-//         if (prod.id === item.id) {
-//           console.log("prod: ", prod);
-//           return {
-//             ...prod,
-//             isFavorite: !prod.isFavorite,
-//           };
-//         }
-//         return prod;
-//       })
-//     );
-//   };
-
-//   return (
-//     <LinearGradient colors={["#FDF0F3", "#FFFBFC"]} style={styles.container}>
-//       {/* header */}
-
-//       {/* <Tags /> */}
-
-//       <FlatList
-//         ListHeaderComponent={
-//           <>
-//             <>
-//               <Header />
-//               <View>
-//                 <Text style={styles.headingText}>
-//                   Find suitable class & enroll now!
-//                 </Text>
-//                 <View style={styles.inputContainer}>
-//                   <Image
-//                     source={require("../assets/search.png")}
-//                     style={styles.searchIcon}
-//                   />
-//                   <TextInput placeholder="Search" style={styles.textInput} />
-//                 </View>
-//               </View>
-//             </>
-//             {/* <Tags /> */}
-//           </>
-//         }
-//         data={products}
-//         numColumns={2}
-//         renderItem={({ item }) => (
-//           <ProductCard
-//             item={item}
-//             handleProductClick={handleProductDetails}
-//             toggleFavorite={toggleFavorite}
-//           />
-//         )}
-//         showsVerticalScrollIndicator={false}
-//       />
-//       <View>
-//         {/* <Text>HomeScreen</Text>
-//         <Text>HomeScreen</Text> */}
-//       </View>
-//     </LinearGradient>
-//   );
-// };
-
-// export default HomeScreen;
-
-// const styles = StyleSheet.create({
-//   container: {
-//     // flex: 1,
-//     padding: 20,
-//   },
-
-//   headingText: {
-//     fontSize: 28,
-//     color: "#000000",
-//     marginVertical: 20,
-//     fontFamily: "Poppins-Regular",
-//   },
-//   inputContainer: {
-//     width: "100%",
-//     backgroundColor: "#FFFFFF",
-//     height: 48,
-//     borderRadius: 12,
-//     alignItems: "center",
-//     flexDirection: "row",
-//   },
-//   searchIcon: {
-//     height: 26,
-//     width: 26,
-//     marginHorizontal: 12,
-//   },
-//   textInput: {
-//     fontSize: 18,
-//     fontFamily: "Poppins-Regular",
-//   },
-// });
-
-// import {
-//   FlatList,
 //   StyleSheet,
 //   View,
 //   Text,
@@ -133,7 +16,22 @@
 // const HomeScreen = () => {
 //   const [courses, setCourses] = useState([]);
 //   const [loading, setLoading] = useState(true);
+//   const [filteredCourses, setFilteredCourses] = useState([]);
+//   const [searchQuery, setSearchQuery] = useState(""); // New state for search input
 //   const navigation = useNavigation();
+
+//   // Hàm để lấy thông tin người đăng dựa trên postedBy
+//   const fetchPostedByInfo = async (postedBy) => {
+//     try {
+//       const snapshot = await database()
+//         .ref(`/user_details/${postedBy}`)
+//         .once("value");
+//       return snapshot.val(); // Trả về thông tin người dùng
+//     } catch (error) {
+//       console.error("Error fetching user info:", error);
+//       return null;
+//     }
+//   };
 
 //   // Hàm để lấy dữ liệu từ Firebase
 //   const fetchCourses = async () => {
@@ -141,14 +39,22 @@
 //       const snapshot = await database().ref("/course").once("value");
 //       const data = snapshot.val();
 
-//       // Chuyển đổi dữ liệu từ object thành array
-//       const coursesArray = Object.keys(data).map((key) => ({
-//         id: key,
-//         ...data[key],
-//       }));
+//       const coursesArray = await Promise.all(
+//         Object.keys(data).map(async (key) => {
+//           const course = data[key];
+//           const postedByInfo = await fetchPostedByInfo(course.postedBy); // Lấy thông tin người đăng
+//           return {
+//             id: key,
+//             ...course,
+//             postedByName: postedByInfo?.name || "Unknown",
+//             profile: postedByInfo?.profile || null,
+//           };
+//         })
+//       );
 
 //       setCourses(coursesArray);
-//       setLoading(false); // Dữ liệu đã được tải
+//       setFilteredCourses(coursesArray); // Initialize filteredCourses with all courses
+//       setLoading(false);
 //     } catch (error) {
 //       console.error("Error fetching courses:", error);
 //       setLoading(false);
@@ -156,11 +62,24 @@
 //   };
 
 //   useEffect(() => {
-//     fetchCourses(); // Gọi hàm để lấy dữ liệu khi component render
+//     fetchCourses();
 //   }, []);
 
+//   // Filter courses based on search query
+//   const handleSearch = (query) => {
+//     setSearchQuery(query);
+//     if (query.trim() === "") {
+//       setFilteredCourses(courses); // Show all courses if search is empty
+//     } else {
+//       const filteredData = courses.filter((course) =>
+//         course.postedByName.toLowerCase().includes(query.toLowerCase())
+//       );
+//       setFilteredCourses(filteredData);
+//     }
+//   };
+
 //   const handleCourseDetails = (item) => {
-//     navigation.navigate("PRODUCT_DETAILS", { item });
+//     navigation.navigate("COURSE_DETAILS", { item });
 //   };
 
 //   if (loading) {
@@ -182,12 +101,18 @@
 //                   source={require("../assets/search.png")}
 //                   style={styles.searchIcon}
 //                 />
-//                 <TextInput placeholder="Search" style={styles.textInput} />
+//                 {/* <TextInput placeholder="Search" style={styles.textInput} /> */}
+//                 <TextInput
+//                   placeholder="Search by author name"
+//                   style={styles.textInput}
+//                   value={searchQuery}
+//                   onChangeText={handleSearch} // Update search query
+//                 />
 //               </View>
 //             </View>
 //           </>
 //         }
-//         data={courses} // Dữ liệu từ Firebase
+//         data={courses} // Dữ liệu từ Firebase với thông tin người đăng
 //         numColumns={2}
 //         renderItem={({ item }) => (
 //           <CourseCard
@@ -250,23 +175,25 @@ import { useNavigation } from "@react-navigation/native";
 
 const HomeScreen = () => {
   const [courses, setCourses] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState(""); // New state for search input
   const navigation = useNavigation();
 
-  // Hàm để lấy thông tin người đăng dựa trên postedBy
+  // Fetch user info based on postedBy ID
   const fetchPostedByInfo = async (postedBy) => {
     try {
       const snapshot = await database()
         .ref(`/user_details/${postedBy}`)
         .once("value");
-      return snapshot.val(); // Trả về thông tin người dùng
+      return snapshot.val(); // Return user info
     } catch (error) {
       console.error("Error fetching user info:", error);
       return null;
     }
   };
 
-  // Hàm để lấy dữ liệu từ Firebase
+  // Fetch courses from Firebase
   const fetchCourses = async () => {
     try {
       const snapshot = await database().ref("/course").once("value");
@@ -275,7 +202,7 @@ const HomeScreen = () => {
       const coursesArray = await Promise.all(
         Object.keys(data).map(async (key) => {
           const course = data[key];
-          const postedByInfo = await fetchPostedByInfo(course.postedBy); // Lấy thông tin người đăng
+          const postedByInfo = await fetchPostedByInfo(course.postedBy); // Get postedBy info
           return {
             id: key,
             ...course,
@@ -286,6 +213,7 @@ const HomeScreen = () => {
       );
 
       setCourses(coursesArray);
+      setFilteredCourses(coursesArray); // Initialize filteredCourses with all courses
       setLoading(false);
     } catch (error) {
       console.error("Error fetching courses:", error);
@@ -296,6 +224,19 @@ const HomeScreen = () => {
   useEffect(() => {
     fetchCourses();
   }, []);
+
+  // Filter courses based on search query
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (query.trim() === "") {
+      setFilteredCourses(courses); // Show all courses if search is empty
+    } else {
+      const filteredData = courses.filter((course) =>
+        course.postedByName.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredCourses(filteredData);
+    }
+  };
 
   const handleCourseDetails = (item) => {
     navigation.navigate("COURSE_DETAILS", { item });
@@ -320,17 +261,22 @@ const HomeScreen = () => {
                   source={require("../assets/search.png")}
                   style={styles.searchIcon}
                 />
-                <TextInput placeholder="Search" style={styles.textInput} />
+                <TextInput
+                  placeholder="Search by author name"
+                  style={styles.textInput}
+                  value={searchQuery}
+                  onChangeText={handleSearch} // Update search query
+                />
               </View>
             </View>
           </>
         }
-        data={courses} // Dữ liệu từ Firebase với thông tin người đăng
+        data={filteredCourses} // Use filteredCourses for display
         numColumns={2}
         renderItem={({ item }) => (
           <CourseCard
-            item={item} // Dữ liệu từng khóa học
-            handleProductClick={handleCourseDetails} // Điều hướng đến chi tiết khóa học
+            item={item} // Course data
+            handleProductClick={handleCourseDetails} // Navigate to course details
           />
         )}
         keyExtractor={(item) => item.id}
@@ -368,5 +314,6 @@ const styles = StyleSheet.create({
   textInput: {
     fontSize: 18,
     fontFamily: "Poppins-Regular",
+    flex: 1,
   },
 });

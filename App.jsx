@@ -13,6 +13,8 @@ import auth from "@react-native-firebase/auth"; // Firebase auth
 import RegisterScreen from "./src/screen/RegisterScreen";
 import CoursesDetailsScreen from "./src/screen/CoursesDetailsScreen";
 import { UserProvider } from "./src/context/UserContext";
+import { collectionGroup } from "@react-native-firebase/firestore";
+import EditProfileScreen from "./src/screen/EditProfileScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -28,6 +30,7 @@ const MyHomeStack = () => {
       <Stack.Screen name="COURSE_DETAILS" component={CoursesDetailsScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
     </Stack.Navigator>
   );
 };
@@ -111,7 +114,7 @@ const App = () => {
                 component={CartScreen}
                 options={{
                   tabBarIcon: ({ focused, size }) => {
-                    const { cartItems } = useContext(CartContext);
+                    const { countCart } = useContext(CartContext);
                     return (
                       <View style={{ position: "relative" }}>
                         <Image
@@ -140,7 +143,8 @@ const App = () => {
                           }}
                         >
                           <Text style={{ color: "white", fontSize: 10 }}>
-                            {/* {cartItems.length} */}0
+                            {/* {cartItems.length} */}
+                            {countCart}
                           </Text>
                         </View>
                       </View>

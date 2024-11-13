@@ -1,54 +1,41 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useEffect, useState } from "react";
+import auth from "@react-native-firebase/auth";
+import database from "@react-native-firebase/database";
 
 export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
-  const [totalPrice, setTotalPrice] = useState(0);
+  const [countCart, setCountCart] = useState(0);
 
   useEffect(() => {
-    loadCartItems();
+    const unsubscribe = setupCountCartListener();
+    return () => unsubscribe && unsubscribe(); // Clean up the listener on component unmount
   }, []);
 
-  const loadCartItems = async () => {
-    let cartItems = await AsyncStorage.getItem("cart");
-    cartItems = cartItems ? JSON.parse(cartItems) : [];
-    setCartItems(cartItems);
-    calculateTotalPrice(cartItems);
-  };
+  const setupCountCartListener = () => {
+    const user = auth().currentUser;
+    if (user) {
+      const userId = user.uid;
+      const ref = database().ref(`/user_details/${userId}/enrolled_courses`);
 
-  const addToCartItem = async (item) => {
-    let cartItems = await AsyncStorage.getItem("cart");
-    cartItems = cartItems ? JSON.parse(cartItems) : [];
-    let isExist = cartItems.findIndex((cart) => cart.id === item.id);
-    if (isExist === -1) {
-      cartItems.push(item);
-      calculateTotalPrice(cartItems);
-      setCartItems(cartItems);
-      await AsyncStorage.setItem("cart", JSON.stringify(cartItems));
+      // Set up listener for changes
+      const listener = ref.on("value", (snapshot) => {
+        const enrolledCourses = snapshot.val();
+        const count = enrolledCourses ? Object.keys(enrolledCourses).length : 0;
+        setCountCart(count);
+      });
+
+      // Return a function to unsubscribe from the listener
+      return () => ref.off("value", listener);
+    } else {
+      console.log("No user is signed in");
+      return null;
     }
   };
 
-  const deleteCartItem = async (id) => {
-    let cartItems = await AsyncStorage.getItem("cart");
-    cartItems = cartItems ? JSON.parse(cartItems) : [];
-    cartItems = cartItems.filter((item) => item.id !== id);
-    setCartItems(cartItems);
-    calculateTotalPrice(cartItems);
-    await AsyncStorage.setItem("cart", JSON.stringify(cartItems));
-  };
-
-  const calculateTotalPrice = (cartItems) => {
-    let totalSum = cartItems.reduce((total, item) => total + item.price, 0);
-    totalSum = totalSum.toFixed(2);
-    setTotalPrice(totalSum);
-  };
-  const value = {
-    cartItems,
-    addToCartItem,
-    deleteCartItem,
-    totalPrice,
-  };
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider value={{ countCart }}>
+      {children}
+    </CartContext.Provider>
+  );
 };
