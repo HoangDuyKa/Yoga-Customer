@@ -16,14 +16,27 @@ export const CartProvider = ({ children }) => {
     const user = auth().currentUser;
     if (user) {
       const userId = user.uid;
-      const ref = database().ref(`/user_details/${userId}/enrolled_courses`);
+      const ref = database().ref(`/Booking`);
 
       // Set up listener for changes
-      const listener = ref.on("value", (snapshot) => {
-        const enrolledCourses = snapshot.val();
-        const count = enrolledCourses ? Object.keys(enrolledCourses).length : 0;
-        setCountCart(count);
-      });
+      const listener = ref
+        .orderByChild("userId")
+        .equalTo(userId)
+        .on("value", (snapshot) => {
+          const bookings = snapshot.val();
+
+          if (bookings) {
+            // Filter bookings with bookingStatus.booked = false
+            const count = Object.values(bookings).filter(
+              (booking) =>
+                booking.bookingStatus && booking.bookingStatus.booked === false
+            ).length;
+
+            setCountCart(count); // Update countCart state
+          } else {
+            setCountCart(0); // No bookings found
+          }
+        });
 
       // Return a function to unsubscribe from the listener
       return () => ref.off("value", listener);

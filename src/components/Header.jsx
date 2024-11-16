@@ -4,7 +4,7 @@ import { fonts } from "../utils/fonts";
 import { useNavigation } from "@react-navigation/native";
 import { UserContext } from "../context/UserContext";
 
-const Header = ({ isCart }) => {
+const Header = ({ isCart, isReorder }) => {
   const navigation = useNavigation();
   const { userImage } = useContext(UserContext);
   const handleBack = () => {
@@ -23,6 +23,16 @@ const Header = ({ isCart }) => {
             style={styles.appBackIcon}
           />
         </TouchableOpacity>
+      ) : isReorder ? (
+        <TouchableOpacity
+          style={styles.appDrawerContainer}
+          onPress={handleBack} // Add specific action for reorder if needed
+        >
+          <Image
+            source={require("../assets/arrowback.png")}
+            style={styles.appBackIcon}
+          />
+        </TouchableOpacity>
       ) : (
         <View style={styles.appDrawerContainer}>
           <Image
@@ -32,7 +42,11 @@ const Header = ({ isCart }) => {
         </View>
       )}
 
-      {isCart ? <Text style={styles.titleText}>My Cart</Text> : null}
+      {isCart ? (
+        <Text style={styles.titleText}>My Cart</Text>
+      ) : isReorder ? (
+        <Text style={styles.titleText}>My Courses</Text>
+      ) : null}
       <View style={styles.appDrawerContainer}>
         <Image
           source={{ uri: userImage }}
