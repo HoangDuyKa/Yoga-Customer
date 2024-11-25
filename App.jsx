@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "./src/screen/HomeScreen";
 import CartScreen from "./src/screen/CartScreen";
 import ReorderScreen from "./src/screen/ReorderScreen";
-import AccountScreen from "./src/screen/AccountScreen";
+import AccountScreen from "./src/screen/ProfileScreen";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { CartContext, CartProvider } from "./src/context/CartContext";
 import LoginScreen from "./src/screen/LoginScreen"; // Thêm màn hình đăng nhập
@@ -13,7 +13,6 @@ import auth from "@react-native-firebase/auth"; // Firebase auth
 import RegisterScreen from "./src/screen/RegisterScreen";
 import CoursesDetailsScreen from "./src/screen/CoursesDetailsScreen";
 import { UserProvider } from "./src/context/UserContext";
-import { collectionGroup } from "@react-native-firebase/firestore";
 import EditProfileScreen from "./src/screen/EditProfileScreen";
 
 const Tab = createBottomTabNavigator();
@@ -143,7 +142,6 @@ const App = () => {
                           }}
                         >
                           <Text style={{ color: "white", fontSize: 10 }}>
-                            {/* {cartItems.length} */}
                             {countCart}
                           </Text>
                         </View>
@@ -176,7 +174,6 @@ const App = () => {
               />
             </Tab.Navigator>
           ) : (
-            // Nếu chưa đăng nhập thì hiển thị màn hình đăng nhập
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />

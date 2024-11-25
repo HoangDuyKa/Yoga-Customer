@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import auth from "@react-native-firebase/auth";
 import database from "@react-native-firebase/database"; // Import Realtime Database
-
+// Segment 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

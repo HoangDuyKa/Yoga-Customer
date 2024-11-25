@@ -15,6 +15,8 @@ import auth from "@react-native-firebase/auth";
 import database from "@react-native-firebase/database";
 import PlaylistItem from "../components/PlaylistItem"; // Import PlaylistItem component
 
+// code broken down into main core sections, with each segment of code followed by an explanation:
+
 const CourseDetailsScreen = () => {
   const route = useRoute();
   const { item } = route.params; // Dữ liệu item từ Firebase, truyền từ HomeScreen
@@ -194,6 +196,17 @@ const CourseDetailsScreen = () => {
         <Text style={styles.courseTitle}>{item.title}</Text>
         <Text style={styles.createdBy}>Created by {item.postedByName}</Text>
 
+        {/* DayOfWeek + Time và Type */}
+        <View style={styles.row}>
+          <Image
+            source={require("./../assets/schedule.png")} // Đường dẫn đến icon play
+            style={styles.starIcon}
+          />
+          <Text style={styles.rating}>{item.dayOfWeek}</Text>
+          <Text style={styles.duration}>{item.time}</Text>
+          <Text style={styles.type}>{item.type}</Text>
+        </View>
+
         {/* Rating và Duration */}
         <View style={styles.row}>
           <Image
@@ -293,7 +306,8 @@ const styles = StyleSheet.create({
     marginLeft: "auto",
     fontSize: 20,
     fontWeight: "bold",
-  },
+  },type:{marginLeft: "auto",
+    fontSize: 20,},
   card: {
     marginTop: 20,
     padding: 8,
