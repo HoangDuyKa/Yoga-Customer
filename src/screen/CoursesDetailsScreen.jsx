@@ -15,6 +15,8 @@ import auth from "@react-native-firebase/auth";
 import database from "@react-native-firebase/database";
 import PlaylistItem from "../components/PlaylistItem"; // Import PlaylistItem component
 
+// code broken down into main core sections, with each segment of code followed by an explanation:
+
 const CourseDetailsScreen = () => {
   const route = useRoute();
   const { item } = route.params; // Dữ liệu item từ Firebase, truyền từ HomeScreen
@@ -34,22 +36,33 @@ const CourseDetailsScreen = () => {
     if (user) {
       const userId = user.uid;
 
-      // Kiểm tra khóa học hiện tại dựa trên courseId
-      const enrollmentSnapshot = await database()
-        .ref(`/user_details/${userId}/enrolled_courses`)
-        .once("value");
-      const enrolledCourses = enrollmentSnapshot.val(); // Lấy dữ liệu dưới dạng object
+      try {
+        // Check if there is an active booking for this course
+        const bookingSnapshot = await database()
+          .ref(`/Booking`)
+          .orderByChild("courseId")
+          .equalTo(item.id)
+          .once("value");
 
-      if (enrolledCourses) {
-        // Duyệt qua từng course để kiểm tra courseId
-        const isAlreadyEnrolled = Object.values(enrolledCourses).some(
-          (course) => course.courseId === item.id
-        );
+        const bookingData = bookingSnapshot.val();
 
-        setIsEnrolled(isAlreadyEnrolled); // Cập nhật trạng thái đã đăng ký
-      } else {
-        setIsEnrolled(false); // Nếu không có khóa học nào được đăng ký
+        if (bookingData) {
+          // Check if the user has an unbooked entry for this course
+          const isAlreadyEnrolled = Object.values(bookingData).some(
+            (booking) => booking.userId === userId
+            // && !booking.bookingStatus.booked
+          );
+
+          setIsEnrolled(isAlreadyEnrolled); // Update enrollment status
+        } else {
+          setIsEnrolled(false); // No bookings found
+        }
+      } catch (error) {
+        console.error("Error checking enrollment status:", error);
+        setIsEnrolled(false); // Assume not enrolled in case of error
       }
+    } else {
+      setIsEnrolled(false); // User is not logged in
     }
   };
 
@@ -60,7 +73,6 @@ const CourseDetailsScreen = () => {
       setPlaylist(convertedPlaylist);
     }
   }, [item]);
-
   // Hàm chuyển đổi hiển thị mô tả hoặc playlist
   const toggleContent = (contentType) => {
     setShowDescription(contentType === "description");
@@ -81,34 +93,23 @@ const CourseDetailsScreen = () => {
       if (user) {
         const userId = user.uid;
 
-        const userSnapshot = await database()
-          .ref(`/user_details/${userId}`)
-          .once("value");
-
-        const userData = userSnapshot.val();
-        const userName = userData?.name || "Anonymous";
-
-        // Add course to user_details under enrolled_courses
-        await database().ref(`/user_details/${userId}/enrolled_courses`).push({
-          courseId: item.id,
-          title: item.title,
-          thumbnailUrl: item.thumbnail,
-          enrolledAt: new Date().toISOString(),
-          price: item.price,
-        });
-
-        // Add user to course under enrolled_users
-        await database().ref(`/course/${item.id}/enrolled_users`).push({
-          userId: userId,
-          name: userName,
-          email: user.email,
-          enrolledAt: new Date().toISOString(),
-        });
+        // Add a new booking entry
+        const bookingId = database().ref().child("Booking").push().key; // Generate unique ID
+        await database()
+          .ref(`/Booking/${bookingId}`)
+          .set({
+            userId: userId,
+            courseId: item.id,
+            bookingDate: new Date().toISOString(),
+            bookingStatus: {
+              booked: false,
+            },
+          });
 
         setIsEnrolled(true); // Update state to reflect enrollment
         Alert.alert(
           "Enrollment Successful",
-          "You have been enrolled in the course!"
+          "You have been enrolled in the course and your booking has been created!"
         );
       } else {
         Alert.alert("Error", "Please log in to enroll in this course.");
@@ -125,49 +126,29 @@ const CourseDetailsScreen = () => {
       if (user) {
         const userId = user.uid;
 
-        // Lấy tất cả khóa học đã đăng ký của người dùng
-        const enrollmentSnapshot = await database()
-          .ref(`/user_details/${userId}/enrolled_courses`)
+        // Find and remove the booking from the Booking table
+        const bookingSnapshot = await database()
+          .ref(`/Booking`)
+          .orderByChild("courseId")
+          .equalTo(item.id)
           .once("value");
 
-        const enrolledCourses = enrollmentSnapshot.val();
-
-        if (enrolledCourses) {
-          // Tìm khóa học với courseId tương ứng
-          const courseKey = Object.keys(enrolledCourses).find(
-            (key) => enrolledCourses[key].courseId === item.id
+        const bookingData = bookingSnapshot.val();
+        if (bookingData) {
+          const bookingKey = Object.keys(bookingData).find(
+            (key) => bookingData[key].userId === userId
           );
 
-          if (courseKey) {
-            // Xóa khóa học cụ thể từ enrolled_courses của người dùng
-            await database()
-              .ref(`/user_details/${userId}/enrolled_courses/${courseKey}`)
-              .remove();
-
-            // Xóa người dùng từ danh sách enrolled_users của khóa học
-            const userEnrollmentRef = await database()
-              .ref(`/course/${item.id}/enrolled_users`)
-              .orderByChild("userId")
-              .equalTo(userId)
-              .once("value");
-
-            const userEnrollmentData = userEnrollmentRef.val();
-            if (userEnrollmentData) {
-              const userEnrollmentKey = Object.keys(userEnrollmentData)[0];
-              await database()
-                .ref(`/course/${item.id}/enrolled_users/${userEnrollmentKey}`)
-                .remove();
-            }
-
-            setIsEnrolled(false); // Cập nhật trạng thái chưa đăng ký
-            Alert.alert(
-              "Unenrollment Successful",
-              "You have been unenrolled from the course."
-            );
-          } else {
-            Alert.alert("Error", "Course not found in your enrollments.");
+          if (bookingKey) {
+            await database().ref(`/Booking/${bookingKey}`).remove();
           }
         }
+
+        setIsEnrolled(false); // Update state to reflect unenrollment
+        Alert.alert(
+          "Unenrollment Successful",
+          "You have been unenrolled from the course and your booking has been removed."
+        );
       } else {
         Alert.alert("Error", "Please log in to unenroll from this course.");
       }
@@ -214,6 +195,17 @@ const CourseDetailsScreen = () => {
       <View style={styles.infoContainer}>
         <Text style={styles.courseTitle}>{item.title}</Text>
         <Text style={styles.createdBy}>Created by {item.postedByName}</Text>
+
+        {/* DayOfWeek + Time và Type */}
+        <View style={styles.row}>
+          <Image
+            source={require("./../assets/schedule.png")} // Đường dẫn đến icon play
+            style={styles.starIcon}
+          />
+          <Text style={styles.rating}>{item.dayOfWeek}</Text>
+          <Text style={styles.duration}>{item.time}</Text>
+          <Text style={styles.type}>{item.type}</Text>
+        </View>
 
         {/* Rating và Duration */}
         <View style={styles.row}>
@@ -314,7 +306,8 @@ const styles = StyleSheet.create({
     marginLeft: "auto",
     fontSize: 20,
     fontWeight: "bold",
-  },
+  },type:{marginLeft: "auto",
+    fontSize: 20,},
   card: {
     marginTop: 20,
     padding: 8,

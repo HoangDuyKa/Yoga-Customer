@@ -14,37 +14,43 @@ import database from "@react-native-firebase/database";
 import { useNavigation } from "@react-navigation/native";
 const CartCard = ({ item }) => {
   const navigation = useNavigation();
+
   const handleUnenroll = async () => {
     try {
       const user = auth().currentUser;
       if (user) {
         const userId = user.uid;
 
-        // Xóa khóa học cụ thể từ enrolled_courses của người dùng bằng cách sử dụng item.id
-        await database()
-          .ref(`/user_details/${userId}/enrolled_courses/${item.id}`)
-          .remove();
-
-        // Xóa người dùng từ danh sách enrolled_users của khóa học
-        const userEnrollmentRef = await database()
-          .ref(`/course/${item.courseId}/enrolled_users`)
-          .orderByChild("userId")
-          .equalTo(userId)
+        // Query the Booking table for entries with matching userId and courseId
+        const bookingSnapshot = await database()
+          .ref(`/Booking`)
+          .orderByChild("userId") // Start by filtering by userId
+          .equalTo(userId) // Match the current user's userId
           .once("value");
 
-        const userEnrollmentData = userEnrollmentRef.val();
-        if (userEnrollmentData) {
-          const userEnrollmentKey = Object.keys(userEnrollmentData)[0];
-          await database()
-            .ref(`/course/${item.courseId}/enrolled_users/${userEnrollmentKey}`)
-            .remove();
-        }
-        navigation.navigate("HOME");
+        const bookingData = bookingSnapshot.val();
+        if (bookingData) {
+          // Look for the specific courseId in the filtered bookings
+          const bookingKey = Object.keys(bookingData).find(
+            (key) => bookingData[key].courseId === item.postId
+          );
 
-        Alert.alert(
-          "Unenrollment Successful",
-          "You have been unenrolled from the course."
-        );
+          if (bookingKey) {
+            // Remove the booking entry from the database
+            await database().ref(`/Booking/${bookingKey}`).remove();
+
+            navigation.navigate("HOME");
+
+            Alert.alert(
+              "Unenrollment Successful",
+              "You have been unenrolled from the course."
+            );
+          } else {
+            Alert.alert("Error", "No matching booking found for this course.");
+          }
+        } else {
+          Alert.alert("Error", "No bookings found for this user.");
+        }
       } else {
         Alert.alert("Error", "Please log in to unenroll from this course.");
       }
@@ -59,7 +65,7 @@ const CartCard = ({ item }) => {
 
   return (
     <View style={styles.card}>
-      <Image source={{ uri: item.thumbnailUrl }} style={styles.image} />
+      <Image source={{ uri: item.thumbnail }} style={styles.image} />
       <View style={styles.content}>
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.enrollDate}>

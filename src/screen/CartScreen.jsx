@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import LinearGradient from "react-native-linear-gradient";
@@ -25,33 +26,81 @@ const CartScreen = () => {
       if (user) {
         const userId = user.uid;
 
-        // Fetch enrolled courses from user_details
+        // Fetch bookings where userId matches and booked:false
         const snapshot = await database()
-          .ref(`/user_details/${userId}/enrolled_courses`)
+          .ref(`/Booking`)
+          .orderByChild("userId")
+          .equalTo(userId)
           .once("value");
 
-        const courses = snapshot.val();
-        if (courses) {
-          // Convert object to array for FlatList
-          const coursesArray = Object.keys(courses).map((key) => ({
-            id: key,
-            ...courses[key],
-          }));
-          setEnrolledCourses(coursesArray);
+        const bookings = snapshot.val();
+
+        if (bookings) {
+          // Filter bookings with booked:false
+          const filteredBookings = Object.keys(bookings)
+            .map((key) => ({
+              id: key, // Booking ID
+              ...bookings[key], // Include all booking details
+            }))
+            .filter((booking) => booking.bookingStatus?.booked === false);
+
+          // Fetch course details for each filtered booking
+          const coursePromises = filteredBookings.map(async (booking) => {
+            const courseSnapshot = await database()
+              .ref(`/course/${booking.courseId}`)
+              .once("value");
+
+            const courseData = courseSnapshot.val();
+            return {
+              ...courseData,
+              bookingId: booking.id,
+              bookingDate: booking.bookingDate,
+              bookingStatus: booking.bookingStatus,
+            };
+          });
+
+          const coursesWithDetails = await Promise.all(coursePromises);
+
+          setEnrolledCourses(coursesWithDetails); // Update state with detailed courses
         } else {
-          setEnrolledCourses([]);
+          setEnrolledCourses([]); // No bookings found
         }
       }
     } catch (error) {
-      console.error("Error fetching enrolled courses:", error);
+      console.error("Error fetching enrolled courses from Booking:", error);
     } finally {
-      setLoading(false);
+      setLoading(false); // Ensure loading stops
     }
   };
 
-  // useEffect(() => {
-  //   fetchEnrolledCourses();
-  // }, []);
+  const handleCheckout = async () => {
+    try {
+      const user = auth().currentUser;
+      if (user) {
+        // Loop through each enrolled course and update booking status
+        const updatePromises = enrolledCourses.map(async (course) => {
+          const bookingRef = database().ref(`/Booking/${course.bookingId}`);
+          await bookingRef.update({
+            bookingStatus: {
+              booked: true, // Update booked to true
+            },
+          });
+        });
+
+        // Wait for all updates to complete
+        await Promise.all(updatePromises);
+
+        Alert.alert("Checkout Successful", "All courses have been booked!");
+        setEnrolledCourses([]); // Clear the enrolled courses list after checkout
+        setTotalPrice(0); // Reset total price
+      } else {
+        Alert.alert("Error", "Please log in to proceed with checkout.");
+      }
+    } catch (error) {
+      console.error("Checkout Error:", error);
+      Alert.alert("Checkout Failed", "An error occurred. Please try again.");
+    }
+  };
 
   // Calculate total price whenever enrolledCourses changes
   useEffect(() => {
@@ -82,7 +131,7 @@ const CartScreen = () => {
         <FlatList
           data={enrolledCourses}
           renderItem={({ item }) => <CartCard item={item} />}
-          keyExtractor={(item) => item.id} // Use unique key for each item
+          keyExtractor={(item) => item.bookingId} // Use unique key for each item
           contentContainerStyle={{ marginTop: 40, paddingBottom: 200 }}
           ListFooterComponent={
             <>
@@ -98,7 +147,7 @@ const CartScreen = () => {
                   <Text style={styles.priceText}>${totalPrice}</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.button}>
+              <TouchableOpacity style={styles.button} onPress={handleCheckout}>
                 <Text style={styles.buttonText}>Checkout</Text>
               </TouchableOpacity>
             </>
